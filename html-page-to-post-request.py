@@ -30,5 +30,5 @@ if __name__ == "__main__":
             key, value = header.split(':')
             headers[key.strip()] = value.strip()
 
-    processor = Processor(url=args.url, depth=args.depth, headers=headers, input_type=args.type, payload=args.payload)
+    processor = Processor(url=args.url, depth=args.depth, headers=headers, input_type=args.type, payload=args.payload, other_function=None)
     processor.process()

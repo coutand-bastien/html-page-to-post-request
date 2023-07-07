@@ -5,11 +5,16 @@ from termcolor import colored
 from utils.Randomer import Randomer
 
 class Formatter:
-    def __init__(self, url_list, headers, input_type, payload):
-        self.url_list   = url_list
-        self.headers    = headers
-        self.input_type = input_type
-        self.payload    = payload
+    '''
+    Class to format the HTML code of a page to be injected
+    '''
+
+    def __init__(self, url_list, headers, input_type, payload, other_function: callable = None):
+        self.url_list       = url_list # list of URL to be injected
+        self.headers        = headers # headers of the request
+        self.input_type     = input_type # type of the input to be injected
+        self.payload        = payload # payload to be injected
+        self.other_function = other_function # other function to be called after the injection if there is some process to do
 
         self.randomer = Randomer()
 
@@ -82,24 +87,24 @@ class Formatter:
             for select_element in select:
                 forms_formatted['inputs_elt'][select_element['name']] = select_element.find('option')[1]['value']
  
-            self.send_inject_payload(forms_formatted) # send the request to the inject endpoint
+            self.send_inject_payload(form_formatted=forms_formatted) # send the request to the inject endpoint
 
         return forms_formatted
     
     def send_inject_payload(self, form_formatted):
         '''
-        Format the request to be sent to the inject endpoint
+        Format the request to be sent to the inject endpoint and perform other
+        function if it's not None.
 
         Args:
             form_formatted (dict): Formatted forms with their inputs
         '''
         print(colored(f'[i]Test : {form_formatted["endpoint"]}', 'yellow'))
         response = requests.post(form_formatted['endpoint'], params=form_formatted['inputs_elt'], headers=self.headers)
-
-        if response.status_code != 200:
-            print(colored(f'[-] {response.status_code}', 'red'))
-        else:
-            print(colored(f'[+] {response.status_code}', 'green'))
+        
+        # if the other function is not None, call it
+        if self.other_function: 
+            self.other_function(response)
 
     def process(self):
         '''
