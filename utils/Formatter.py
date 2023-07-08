@@ -8,27 +8,24 @@ class Formatter:
     '''
     Class to format the HTML code of a page to be injected
     '''
-
     def __init__(self, url_list, headers, input_type, payload, other_function: callable = None):
         self.url_list       = url_list # list of URL to be injected
         self.headers        = headers # headers of the request
         self.input_type     = input_type # type of the input to be injected
         self.payload        = payload # payload to be injected
         self.other_function = other_function # other function to be called after the injection if there is some process to do
-
+        
+        self.common_url = ""
         self.randomer = Randomer()
 
-    def get_html(self, url):
+    def get_html(self):
         '''
         Get the HTML code of a page
-
-        Args:
-            url (str): URL of the page
 
         Returns:
             str: HTML code to be injected
         '''
-        return requests.get(url, headers=self.headers).content
+        return requests.get(self.common_url, headers=self.headers).content
 
 
     def format_html(self, html_content, input_type, payload):
@@ -47,12 +44,18 @@ class Formatter:
             dict: Formatted forms with their inputs
         '''
         forms_formatted = {}
+        forms_formatted['inputs_elt'] = {} # init the inputs of the form
 
         soup  = BeautifulSoup(html_content, 'html.parser')
         forms = soup.find_all('form') # get all form
 
         for form in forms:
-            forms_formatted['endpoint'] = form.get('action') # get the endpoint of the form
+            form_action = form.get('action') # get the endpoint of the form
+            
+            # if the form doesn't have action, we take the url
+            form_action = self.common_url if not form_action else self.common_url+form_action
+            
+            forms_formatted['endpoint'] = form_action 
             
             injectable_inputs = soup.find_all('input', {'type': input_type}) # get all the text inputs
 
@@ -67,8 +70,8 @@ class Formatter:
                     forms_formatted['inputs_elt'][input_element['name']] = payload
                 else:
                     forms_formatted['inputs_elt'][input_element['name']] = self.randomer.generate_random_value(input_type=input_element['type'], min_length=mini, max_length=maxi)
-            
-            other_required_input = soup.find_all('input', {'required': True}) - injectable_inputs # all the required inputs except text inputs because they are already taken
+
+            other_required_input = list(set(soup.find_all('input', {'required': True})) - set(injectable_inputs)) # remove the injectable inputs
 
             # format the other required inputs with random value
             for input_element in other_required_input:
@@ -81,7 +84,7 @@ class Formatter:
                     forms_formatted['inputs_elt'][input_element['name']] = self.randomer.generate_random_value(input_type=input_element['type'], min_length=mini, max_length=maxi)
                 else:
                     forms_formatted['inputs_elt'][input_element['name']] =  self.randomer.generate_random_value(input_type=input_element['type'])
-
+ 
             # format the select with the 1st option
             select = soup.find_all('select', {'required': True})
             for select_element in select:
@@ -111,6 +114,9 @@ class Formatter:
         Process the injection
         '''
         for url in self.url_list:
-            html_content    = self.get_html(url=url)
+            self.common_url = url
+
+            html_content    = self.get_html()
+            print(html_content)
             forms_formatted = self.format_html(html_content=html_content, input_type=self.input_type, payload=self.payload)
             print(forms_formatted)
