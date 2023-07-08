@@ -8,7 +8,7 @@ if __name__ == "__main__":
     print(pyfiglet.figlet_format("html-page-to-post-request", font="slant"))
 
     parser = argparse.ArgumentParser(description="html-page-to-post-request")
-    parser.add_argument("url", help="URL to crawl")
+    parser.add_argument("url", help="Base url to use")
     parser.add_argument("-d", "--depth", help="Maximum depth to crawl", default=3, type=int)
     parser.add_argument("-t", "--type", help="Type of the input to inject", default="text")
     parser.add_argument('--headers', type=str, help='Specify the header value')

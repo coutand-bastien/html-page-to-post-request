@@ -117,6 +117,5 @@ class Formatter:
             self.common_url = url
 
             html_content    = self.get_html()
-            print(html_content)
             forms_formatted = self.format_html(html_content=html_content, input_type=self.input_type, payload=self.payload)
             print(forms_formatted)
